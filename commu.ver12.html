@@ -1,0 +1,2475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Cal Community</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        .masonry-grid {
+            column-count: 2;
+            column-gap: 1rem;
+        }
+        @media (min-width: 768px) {
+            .masonry-grid {
+                column-count: 3;
+            }
+        }
+        @media (min-width: 1024px) {
+            .masonry-grid {
+                column-count: 4;
+            }
+        }
+        .masonry-item {
+            break-inside: avoid;
+            margin-bottom: 1rem;
+        }
+        .heart-animation {
+            animation: heartBeat 0.3s ease-in-out;
+        }
+        @keyframes heartBeat {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        .modal-backdrop {
+            backdrop-filter: blur(4px);
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="bg-white min-h-screen pb-20">
+    <!-- Header -->
+    <header class="sticky top-0 bg-white border-b border-gray-200 z-40 px-4 py-3">
+        <div class="flex items-center justify-between max-w-6xl mx-auto">
+            <h1 class="text-2xl font-bold text-gray-900">E-Cal</h1>
+            <div class="flex items-center space-x-4">
+                <button id="filterBtn" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                    </svg>
+                </button>
+                <div id="userAvatar" class="w-8 h-8 bg-gray-300 rounded-full cursor-pointer hover:ring-2 hover:ring-gray-300 transition-all"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Filter Bar -->
+    <div id="filterBar" class="hidden bg-[#f5f5f5] px-4 py-3 border-b border-gray-200">
+        <div class="flex space-x-2 overflow-x-auto max-w-6xl mx-auto">
+            <button class="filter-btn active px-4 py-2 rounded-full bg-[#cc1e0f] text-white text-sm whitespace-nowrap" data-filter="all">All</button>
+            <button class="filter-btn px-4 py-2 rounded-full bg-white text-gray-700 text-sm whitespace-nowrap hover:bg-gray-100" data-filter="food">Food</button>
+            <button class="filter-btn px-4 py-2 rounded-full bg-white text-gray-700 text-sm whitespace-nowrap hover:bg-gray-100" data-filter="before-after">Before-After</button>
+            <button class="filter-btn px-4 py-2 rounded-full bg-white text-gray-700 text-sm whitespace-nowrap hover:bg-gray-100" data-filter="lifestyle">Lifestyle</button>
+            <button class="filter-btn px-4 py-2 rounded-full bg-white text-gray-700 text-sm whitespace-nowrap hover:bg-gray-100" data-filter="travel">Travel</button>
+            <button class="filter-btn px-4 py-2 rounded-full bg-white text-gray-700 text-sm whitespace-nowrap hover:bg-gray-100" data-filter="workout">Workout</button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main id="mainContent" class="max-w-6xl mx-auto px-4 py-6">
+        <!-- Home Feed -->
+        <div id="homeFeed" class="page active">
+            <!-- Category Bar for Feed -->
+            <div class="mb-6">
+                <div class="flex space-x-2 overflow-x-auto pb-2">
+                    <button class="feed-category-btn active px-4 py-2 rounded-full bg-[#cc1e0f] text-white text-sm whitespace-nowrap" data-category="all">All</button>
+                    <button class="feed-category-btn px-4 py-2 rounded-full bg-[#f5f5f5] text-gray-700 text-sm whitespace-nowrap hover:bg-gray-200" data-category="food">Food</button>
+                    <button class="feed-category-btn px-4 py-2 rounded-full bg-[#f5f5f5] text-gray-700 text-sm whitespace-nowrap hover:bg-gray-200" data-category="workout">Workout</button>
+                    <button class="feed-category-btn px-4 py-2 rounded-full bg-[#f5f5f5] text-gray-700 text-sm whitespace-nowrap hover:bg-gray-200" data-category="before-after">Before&After</button>
+                    <button class="feed-category-btn px-4 py-2 rounded-full bg-[#f5f5f5] text-gray-700 text-sm whitespace-nowrap hover:bg-gray-200" data-category="travel">Travel</button>
+                    <button class="feed-category-btn px-4 py-2 rounded-full bg-[#f5f5f5] text-gray-700 text-sm whitespace-nowrap hover:bg-gray-200" data-category="lifestyle">Lifestyle</button>
+                </div>
+            </div>
+            <div id="postsGrid" class="masonry-grid">
+                <!-- Posts will be dynamically loaded here -->
+            </div>
+            <div id="loadingSpinner" class="text-center py-8 hidden">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#cc1e0f]"></div>
+            </div>
+        </div>
+
+        <!-- Upload Page -->
+        <div id="uploadPage" class="page hidden">
+            <div class="max-w-lg mx-auto">
+                <h2 class="text-2xl font-bold mb-6">Share Your Moment</h2>
+                <form id="uploadForm" class="space-y-6">
+                    <div class="bg-[#e9e2d0] rounded-2xl p-6 text-center border-2 border-dashed border-gray-300 hover:border-[#cc1e0f] transition-colors cursor-pointer" id="uploadArea">
+                        <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <p class="text-gray-600">Click to upload photos/videos or drag and drop</p>
+                        <p class="text-sm text-gray-500 mt-1">Support multiple files</p>
+                        <input type="file" id="mediaInput" class="hidden" accept="image/*,video/*" multiple>
+                    </div>
+                    <div id="mediaPreview" class="hidden space-y-4">
+                        <div id="previewContainer" class="grid grid-cols-2 gap-4"></div>
+                        <button type="button" id="addMoreMedia" class="w-full py-2 border-2 border-dashed border-gray-300 rounded-2xl text-gray-600 hover:border-[#cc1e0f] transition-colors">
+                            + Add More Media
+                        </button>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                        <select id="categorySelect" class="w-full p-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-[#cc1e0f] focus:border-transparent">
+                            <option value="food">Food</option>
+                            <option value="before-after">Before-After</option>
+                            <option value="lifestyle">Lifestyle</option>
+                            <option value="travel">Travel</option>
+                            <option value="workout">Workout</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Caption</label>
+                        <textarea id="captionInput" rows="4" class="w-full p-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-[#cc1e0f] focus:border-transparent" placeholder="Share your story..."></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-[#cc1e0f] text-white py-3 px-6 rounded-2xl font-medium hover:bg-red-800 transition-colors">
+                        Share Post
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Profile Page -->
+        <div id="profilePage" class="page hidden">
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-[#e9e2d0] rounded-2xl p-6 mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center space-x-4">
+                            <div id="profileAvatar" class="w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center text-2xl cursor-pointer hover:opacity-80 transition-opacity">👤</div>
+                            <div>
+                                <h2 id="profileName" class="text-2xl font-bold">Demo User</h2>
+                                <p id="profileBio" class="text-gray-600">Health enthusiast | Foodie | Traveler</p>
+                            </div>
+                        </div>
+                        <button id="editProfileBtn" class="bg-[#cc1e0f] text-white px-4 py-2 rounded-2xl hover:bg-red-800 transition-colors">
+                            Edit Profile
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 text-center">
+                        <div>
+                            <div id="userPostCount" class="text-2xl font-bold text-[#cc1e0f]">12</div>
+                            <div class="text-sm text-gray-600">Posts</div>
+                        </div>
+                        <div>
+                            <div id="userLikeCount" class="text-2xl font-bold text-[#cc1e0f]">248</div>
+                            <div class="text-sm text-gray-600">Likes</div>
+                        </div>
+                        <div>
+                            <div id="userCommentCount" class="text-2xl font-bold text-[#cc1e0f]">89</div>
+                            <div class="text-sm text-gray-600">Comments</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="userPosts" class="masonry-grid">
+                    <!-- User posts will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Events Page -->
+        <div id="eventsPage" class="page hidden">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Community Events</h2>
+                    <button id="createEventBtn" class="bg-[#cc1e0f] text-white px-4 py-2 rounded-2xl hover:bg-red-800 transition-colors">
+                        Create Event
+                    </button>
+                </div>
+                <!-- Category Bar for Events -->
+                <div class="mb-6">
+                    <div class="flex space-x-2 overflow-x-auto pb-2">
+                        <button class="event-category-btn active px-4 py-2 rounded-full bg-[#cc1e0f] text-white text-sm whitespace-nowrap" data-category="all">All</button>
+                        <button class="event-category-btn px-4 py-2 rounded-full bg-[#f5f5f5] text-gray-700 text-sm whitespace-nowrap hover:bg-gray-200" data-category="food">Food</button>
+                        <button class="event-category-btn px-4 py-2 rounded-full bg-[#f5f5f5] text-gray-700 text-sm whitespace-nowrap hover:bg-gray-200" data-category="workout">Workout</button>
+                        <button class="event-category-btn px-4 py-2 rounded-full bg-[#f5f5f5] text-gray-700 text-sm whitespace-nowrap hover:bg-gray-200" data-category="before-after">Before&After</button>
+                        <button class="event-category-btn px-4 py-2 rounded-full bg-[#f5f5f5] text-gray-700 text-sm whitespace-nowrap hover:bg-gray-200" data-category="travel">Travel</button>
+                        <button class="event-category-btn px-4 py-2 rounded-full bg-[#f5f5f5] text-gray-700 text-sm whitespace-nowrap hover:bg-gray-200" data-category="lifestyle">Lifestyle</button>
+                    </div>
+                </div>
+                <div id="eventsList" class="space-y-4">
+                    <!-- Events will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Saved Posts Page -->
+        <div id="savedPage" class="page hidden">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="text-2xl font-bold mb-6">My Saved Posts</h2>
+                <!-- Category Bar for Saved Posts -->
+                <div class="mb-6">
+                    <div class="flex space-x-2 overflow-x-auto pb-2">
+                        <button class="saved-category-btn active px-4 py-2 rounded-full bg-[#cc1e0f] text-white text-sm whitespace-nowrap" data-category="all">All</button>
+                        <button class="saved-category-btn px-4 py-2 rounded-full bg-[#f5f5f5] text-gray-700 text-sm whitespace-nowrap hover:bg-gray-200" data-category="food">Food</button>
+                        <button class="saved-category-btn px-4 py-2 rounded-full bg-[#f5f5f5] text-gray-700 text-sm whitespace-nowrap hover:bg-gray-200" data-category="workout">Workout</button>
+                        <button class="saved-category-btn px-4 py-2 rounded-full bg-[#f5f5f5] text-gray-700 text-sm whitespace-nowrap hover:bg-gray-200" data-category="before-after">Before&After</button>
+                        <button class="saved-category-btn px-4 py-2 rounded-full bg-[#f5f5f5] text-gray-700 text-sm whitespace-nowrap hover:bg-gray-200" data-category="travel">Travel</button>
+                        <button class="saved-category-btn px-4 py-2 rounded-full bg-[#f5f5f5] text-gray-700 text-sm whitespace-nowrap hover:bg-gray-200" data-category="lifestyle">Lifestyle</button>
+                    </div>
+                </div>
+                <div id="savedPosts" class="masonry-grid">
+                    <!-- Saved posts will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-50">
+        <div class="flex justify-around items-center max-w-md mx-auto">
+            <button class="nav-btn active p-3 rounded-full hover:bg-gray-100 transition-colors" data-page="homeFeed">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                </svg>
+            </button>
+            <button class="nav-btn p-3 rounded-full hover:bg-gray-100 transition-colors" data-page="uploadPage">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+            </button>
+            <button class="nav-btn p-3 rounded-full hover:bg-gray-100 transition-colors" data-page="savedPage">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                </svg>
+            </button>
+            <button class="nav-btn p-3 rounded-full hover:bg-gray-100 transition-colors" data-page="eventsPage">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+            </button>
+            <button class="nav-btn p-3 rounded-full hover:bg-gray-100 transition-colors" data-page="profilePage">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Post Detail Modal -->
+    <div id="postDetailModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-3xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden flex">
+            <!-- Image Section -->
+            <div class="flex-1 bg-black flex items-center justify-center">
+                <img id="modalPostImage" src="" alt="" class="max-w-full max-h-full object-contain">
+            </div>
+            
+            <!-- Details Section -->
+            <div class="w-96 flex flex-col">
+                <!-- Header -->
+                <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                    <div class="flex items-center space-x-3">
+                        <div id="modalUserAvatar" class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                            👤
+                        </div>
+                        <div>
+                            <div id="modalUserName" class="font-semibold">User Name</div>
+                            <div id="modalPostTime" class="text-sm text-gray-500">2h ago</div>
+                        </div>
+                    </div>
+                    <button id="closePostModal" class="p-2 hover:bg-gray-100 rounded-full">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Caption -->
+                <div class="p-4 border-b border-gray-200">
+                    <p id="modalPostCaption" class="text-gray-800"></p>
+                    <span id="modalPostCategory" class="inline-block mt-2 text-xs bg-[#f5f5f5] px-2 py-1 rounded-full text-gray-600 capitalize"></span>
+                </div>
+                
+                <!-- Actions -->
+                <div class="p-4 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-6">
+                            <button id="modalLikeBtn" class="flex items-center space-x-2 hover:scale-110 transition-transform">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.682l-1.318-1.364a4.5 4.5 0 00-6.364 0z"></path>
+                                </svg>
+                                <span id="modalLikeCount" class="font-medium">0</span>
+                            </button>
+                            <button id="modalCommentBtn" class="flex items-center space-x-2 hover:scale-110 transition-transform">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                </svg>
+                                <span id="modalCommentCount" class="font-medium">0</span>
+                            </button>
+                        </div>
+                        <button id="modalSaveBtn" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Comments -->
+                <div class="flex-1 overflow-y-auto">
+                    <div id="modalCommentsList" class="p-4 space-y-4">
+                        <!-- Comments will be loaded here -->
+                    </div>
+                </div>
+                
+                <!-- Add Comment -->
+                <div class="p-4 border-t border-gray-200">
+                    <div class="flex space-x-3">
+                        <div class="w-8 h-8 bg-gray-300 rounded-full flex-shrink-0 flex items-center justify-center text-sm">
+                            👤
+                        </div>
+                        <div class="flex-1 flex space-x-2">
+                            <input id="modalCommentInput" type="text" placeholder="Add a comment..." class="flex-1 p-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-[#cc1e0f] focus:border-transparent">
+                            <button id="modalSubmitComment" class="bg-[#cc1e0f] text-white px-4 py-2 rounded-full hover:bg-red-800 transition-colors">
+                                Post
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Edit Modal -->
+    <div id="profileEditModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-3xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold">Edit Profile</h3>
+                    <button id="closeProfileEditModal" class="p-2 hover:bg-gray-100 rounded-full">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <form id="profileEditForm" class="space-y-4">
+                    <div class="text-center">
+                        <div id="editProfileAvatar" class="w-24 h-24 bg-gray-300 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl cursor-pointer hover:opacity-80 transition-opacity">👤</div>
+                        <button type="button" id="changeAvatarBtn" class="text-[#cc1e0f] text-sm hover:underline">Change Photo</button>
+                        <input type="file" id="avatarInput" class="hidden" accept="image/*">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Display Name</label>
+                        <input id="editProfileName" type="text" class="w-full p-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-[#cc1e0f] focus:border-transparent" placeholder="Enter your name">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Bio</label>
+                        <textarea id="editProfileBio" rows="3" class="w-full p-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-[#cc1e0f] focus:border-transparent" placeholder="Tell us about yourself"></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-[#cc1e0f] text-white py-3 px-6 rounded-2xl font-medium hover:bg-red-800 transition-colors">
+                        Save Changes
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Post Edit Modal -->
+    <div id="postEditModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-3xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold">Edit Post</h3>
+                    <button id="closePostEditModal" class="p-2 hover:bg-gray-100 rounded-full">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <form id="postEditForm" class="space-y-4">
+                    <div id="editMediaPreview" class="space-y-4">
+                        <!-- Current media will be shown here -->
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                        <select id="editCategorySelect" class="w-full p-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-[#cc1e0f] focus:border-transparent">
+                            <option value="food">Food</option>
+                            <option value="before-after">Before-After</option>
+                            <option value="lifestyle">Lifestyle</option>
+                            <option value="travel">Travel</option>
+                            <option value="workout">Workout</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Caption</label>
+                        <textarea id="editCaptionInput" rows="4" class="w-full p-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-[#cc1e0f] focus:border-transparent" placeholder="Share your story..."></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-[#cc1e0f] text-white py-3 px-6 rounded-2xl font-medium hover:bg-red-800 transition-colors">
+                        Save Changes
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Creation Modal -->
+    <div id="eventModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-3xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold">Create Event</h3>
+                    <button id="closeEventModal" class="p-2 hover:bg-gray-100 rounded-full">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <form id="eventForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Event Title</label>
+                        <input id="eventTitle" type="text" class="w-full p-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-[#cc1e0f] focus:border-transparent" placeholder="Enter event title">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <textarea id="eventDescription" rows="3" class="w-full p-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-[#cc1e0f] focus:border-transparent" placeholder="Describe your event"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Event Media (Optional)</label>
+                        <div class="bg-[#e9e2d0] rounded-2xl p-4 text-center border-2 border-dashed border-gray-300 hover:border-[#cc1e0f] transition-colors cursor-pointer" id="eventUploadArea">
+                            <svg class="mx-auto h-8 w-8 text-gray-400 mb-2" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <p class="text-gray-600 text-sm">Add photos or videos</p>
+                            <input type="file" id="eventMediaInput" class="hidden" accept="image/*,video/*" multiple>
+                        </div>
+                        <div id="eventMediaPreview" class="hidden mt-4">
+                            <div id="eventPreviewContainer" class="grid grid-cols-2 gap-2"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                        <select id="eventCategorySelect" class="w-full p-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-[#cc1e0f] focus:border-transparent">
+                            <option value="food">Food</option>
+                            <option value="workout">Workout</option>
+                            <option value="travel">Travel</option>
+                            <option value="lifestyle">Lifestyle</option>
+                            <option value="before-after">Before-After</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                            <input id="eventDate" type="date" class="w-full p-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-[#cc1e0f] focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Time</label>
+                            <input id="eventTime" type="time" class="w-full p-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-[#cc1e0f] focus:border-transparent">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                        <input id="eventLocation" type="text" class="w-full p-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-[#cc1e0f] focus:border-transparent" placeholder="Event location">
+                    </div>
+                    <button type="submit" class="w-full bg-[#cc1e0f] text-white py-3 px-6 rounded-2xl font-medium hover:bg-red-800 transition-colors">
+                        Create Event
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Detail Modal -->
+    <div id="eventDetailModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-3xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 id="eventDetailTitle" class="text-2xl font-bold">Event Title</h3>
+                    <button id="closeEventDetailModal" class="p-2 hover:bg-gray-100 rounded-full">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Event Media -->
+                <div id="eventDetailMedia" class="mb-6 hidden">
+                    <div id="eventMediaContainer" class="grid grid-cols-1 gap-4"></div>
+                </div>
+                
+                <!-- Event Info -->
+                <div class="space-y-4 mb-6">
+                    <div>
+                        <h4 class="font-semibold text-gray-700 mb-2">Description</h4>
+                        <p id="eventDetailDescription" class="text-gray-600"></p>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <h4 class="font-semibold text-gray-700 mb-1">Date & Time</h4>
+                            <div class="flex items-center space-x-2 text-gray-600">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <span id="eventDetailDateTime"></span>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-700 mb-1">Location</h4>
+                            <div class="flex items-center space-x-2 text-gray-600">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                <span id="eventDetailLocation"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-gray-700 mb-1">Organizer</h4>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-sm">👤</div>
+                            <span id="eventDetailCreator" class="text-gray-600"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Attendees -->
+                <div class="bg-[#f5f5f5] rounded-2xl p-4 mb-6">
+                    <h4 class="font-semibold text-gray-700 mb-3">Attendees</h4>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-6 text-sm">
+                            <span class="text-green-600 font-medium">✓ <span id="eventDetailGoing">0</span> Going</span>
+                            <span class="text-yellow-600 font-medium">★ <span id="eventDetailInterested">0</span> Interested</span>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button id="eventDetailGoingBtn" class="px-4 py-2 rounded-full text-sm font-medium transition-colors bg-white text-gray-700 hover:bg-gray-100">
+                                Going
+                            </button>
+                            <button id="eventDetailInterestedBtn" class="px-4 py-2 rounded-full text-sm font-medium transition-colors bg-white text-gray-700 hover:bg-gray-100">
+                                Interested
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // LIFF Integration
+        async function initLIFF() {
+            try {
+                // For demo purposes, we'll simulate LIFF initialization
+                // In production, replace with actual LIFF ID
+                console.log("LIFF initialized (demo mode)");
+                
+                // Simulate user profile
+                const mockProfile = {
+                    userId: 'demo_user_123',
+                    displayName: 'Demo User',
+                    pictureUrl: ''
+                };
+                
+                window.localStorage.setItem("lineUserId", mockProfile.userId);
+                window.localStorage.setItem("userName", mockProfile.displayName);
+                
+                // Update UI with user info
+                document.getElementById('profileName').textContent = mockProfile.displayName;
+                
+            } catch (e) {
+                console.error("LIFF init error", e);
+            }
+        }
+
+        // App State
+        let currentUser = null;
+        let posts = [];
+        let events = [];
+        let savedPosts = [];
+        let currentFilter = 'all';
+        let currentPostId = null;
+
+        // Sample Data
+        const samplePosts = [
+            {
+                id: 1,
+                user: { name: 'Sarah Chen', avatar: '👩‍🍳' },
+                media: [
+                    { type: 'image', url: 'https://i.pinimg.com/1200x/17/00/73/17007349ac36101b3405048f5babae6d.jpg' },
+                    { type: 'image', url: 'https://i.pinimg.com/736x/13/c7/fb/13c7fba1614b2ce909942ba73d7a757d.jpg' }
+                ],
+                caption: 'Homemade pizza night! 🍕 Nothing beats fresh ingredients and good company.',
+                category: 'food',
+                likes: 24,
+                comments: [],
+                liked: false,
+                saved: false,
+                timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000)
+            },
+            {
+                id: 2,
+                user: { name: 'Mike Johnson', avatar: '💪' },
+                media: [
+                    { type: 'image', url: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=500&fit=crop' }
+                ],
+                caption: '6 months transformation! Consistency is key 💪 #beforeafter #fitness',
+                category: 'before-after',
+                likes: 156,
+                comments: [
+                    { id: 1, user: 'John Doe', avatar: '👨', text: 'Amazing transformation! What was your routine?', timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000) },
+                    { id: 2, user: 'Jane Smith', avatar: '👩', text: 'So inspiring! Keep up the great work 💪', timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000) }
+                ],
+                liked: true,
+                saved: true,
+                timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000)
+            },
+            {
+                id: 3,
+                user: { name: 'Emma Wilson', avatar: '🌸' },
+                media: [
+                    { type: 'image', url: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=700&fit=crop' }
+                ],
+                caption: 'Morning hike to clear the mind 🏔️ Nature is the best therapy.',
+                category: 'lifestyle',
+                likes: 89,
+                comments: [
+                    { id: 3, user: 'Mike Wilson', avatar: '🧑', text: 'Beautiful view! Where is this?', timestamp: new Date(Date.now() - 30 * 60 * 1000) }
+                ],
+                liked: false,
+                saved: false,
+                timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000)
+            },
+            {
+                id: 4,
+                user: { name: 'Alex Kim', avatar: '🏃‍♂️' },
+                media: [
+                    { type: 'image', url: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=450&fit=crop' }
+                ],
+                caption: 'Post-workout glow! Today was leg day and I\'m feeling strong 💪',
+                category: 'workout',
+                likes: 67,
+                comments: [],
+                liked: true,
+                saved: false,
+                timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000)
+            },
+            {
+                id: 5,
+                user: { name: 'Lisa Park', avatar: '✈️' },
+                media: [
+                    { type: 'image', url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=600&fit=crop' }
+                ],
+                caption: 'Sunset in Santorini 🌅 Sometimes you need to travel to find yourself.',
+                category: 'travel',
+                likes: 203,
+                comments: [],
+                liked: false,
+                saved: true,
+                timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000)
+            },
+            {
+                id: 6,
+                user: { name: 'David Lee', avatar: '🥗' },
+                media: [
+                    { type: 'image', url: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=500&fit=crop' }
+                ],
+                caption: 'Meal prep Sunday! Healthy eating starts with preparation 🥗',
+                category: 'food',
+                likes: 45,
+                comments: [],
+                liked: false,
+                saved: false,
+                timestamp: new Date(Date.now() - 36 * 60 * 60 * 1000)
+            }
+        ];
+
+        const sampleEvents = [
+            {
+                id: 1,
+                title: 'Community Yoga Session',
+                description: 'Join us for a relaxing morning yoga session in the park. All levels welcome!',
+                date: '2024-02-15',
+                time: '08:00',
+                location: 'Central Park',
+                creator: 'Emma Wilson',
+                category: 'workout',
+                media: [
+                    { type: 'image', url: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=300&fit=crop' }
+                ],
+                attendees: { going: 12, interested: 8, not_going: 2 },
+                userStatus: 'interested'
+            },
+            {
+                id: 2,
+                title: 'Healthy Cooking Workshop',
+                description: 'Learn to cook delicious and nutritious meals with our chef instructor.',
+                date: '2024-02-18',
+                time: '14:00',
+                location: 'Community Kitchen',
+                creator: 'Sarah Chen',
+                category: 'food',
+                media: [
+                    { type: 'image', url: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop' }
+                ],
+                attendees: { going: 8, interested: 15, not_going: 1 },
+                userStatus: 'going'
+            },
+            {
+                id: 3,
+                title: 'Hiking Adventure',
+                description: 'Explore beautiful mountain trails with fellow outdoor enthusiasts.',
+                date: '2024-02-20',
+                time: '07:00',
+                location: 'Mountain Trail Head',
+                creator: 'Mike Johnson',
+                category: 'travel',
+                media: [
+                    { type: 'image', url: 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=400&h=300&fit=crop' }
+                ],
+                attendees: { going: 15, interested: 12, not_going: 0 },
+                userStatus: 'going'
+            },
+            {
+                id: 4,
+                title: 'Mindfulness Workshop',
+                description: 'Learn meditation techniques and mindful living practices.',
+                date: '2024-02-22',
+                time: '18:00',
+                location: 'Wellness Center',
+                creator: 'Lisa Park',
+                category: 'lifestyle',
+                media: [],
+                attendees: { going: 6, interested: 20, not_going: 1 },
+                userStatus: 'interested'
+            }
+        ];
+
+        // Initialize app
+        function initApp() {
+            posts = [...samplePosts];
+            events = [...sampleEvents];
+            savedPosts = posts.filter(post => post.saved);
+            
+            renderPosts();
+            renderEvents();
+            renderSavedPosts();
+            renderUserPosts();
+            updateUserStats();
+            
+            initLIFF();
+        }
+
+        // Navigation
+        function setupNavigation() {
+            const navBtns = document.querySelectorAll('.nav-btn');
+            const pages = document.querySelectorAll('.page');
+
+            navBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const targetPage = btn.dataset.page;
+                    
+                    // Update active nav button
+                    navBtns.forEach(b => b.classList.remove('active', 'text-[#cc1e0f]'));
+                    btn.classList.add('active', 'text-[#cc1e0f]');
+                    
+                    // Show target page
+                    pages.forEach(page => page.classList.add('hidden'));
+                    document.getElementById(targetPage).classList.remove('hidden');
+                });
+            });
+        }
+
+        // Filter functionality
+        function setupFilters() {
+            const filterBtn = document.getElementById('filterBtn');
+            const filterBar = document.getElementById('filterBar');
+            const filterBtns = document.querySelectorAll('.filter-btn');
+
+            filterBtn.addEventListener('click', () => {
+                filterBar.classList.toggle('hidden');
+            });
+
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentFilter = btn.dataset.filter;
+                    
+                    // Update active filter button
+                    filterBtns.forEach(b => {
+                        b.classList.remove('bg-[#cc1e0f]', 'text-white');
+                        b.classList.add('bg-white', 'text-gray-700');
+                    });
+                    btn.classList.remove('bg-white', 'text-gray-700');
+                    btn.classList.add('bg-[#cc1e0f]', 'text-white');
+                    
+                    renderPosts();
+                });
+            });
+
+            // Setup feed category filters
+            setupFeedCategoryFilters();
+            setupSavedCategoryFilters();
+            setupEventCategoryFilters();
+        }
+
+        function setupFeedCategoryFilters() {
+            const feedCategoryBtns = document.querySelectorAll('.feed-category-btn');
+            
+            feedCategoryBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const category = btn.dataset.category;
+                    
+                    // Update active button
+                    feedCategoryBtns.forEach(b => {
+                        b.classList.remove('bg-[#cc1e0f]', 'text-white');
+                        b.classList.add('bg-[#f5f5f5]', 'text-gray-700');
+                    });
+                    btn.classList.remove('bg-[#f5f5f5]', 'text-gray-700');
+                    btn.classList.add('bg-[#cc1e0f]', 'text-white');
+                    
+                    currentFilter = category;
+                    renderPosts();
+                });
+            });
+        }
+
+        function setupSavedCategoryFilters() {
+            const savedCategoryBtns = document.querySelectorAll('.saved-category-btn');
+            
+            savedCategoryBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const category = btn.dataset.category;
+                    
+                    // Update active button
+                    savedCategoryBtns.forEach(b => {
+                        b.classList.remove('bg-[#cc1e0f]', 'text-white');
+                        b.classList.add('bg-[#f5f5f5]', 'text-gray-700');
+                    });
+                    btn.classList.remove('bg-[#f5f5f5]', 'text-gray-700');
+                    btn.classList.add('bg-[#cc1e0f]', 'text-white');
+                    
+                    renderSavedPosts(category);
+                });
+            });
+        }
+
+        function setupEventCategoryFilters() {
+            const eventCategoryBtns = document.querySelectorAll('.event-category-btn');
+            
+            eventCategoryBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const category = btn.dataset.category;
+                    
+                    // Update active button
+                    eventCategoryBtns.forEach(b => {
+                        b.classList.remove('bg-[#cc1e0f]', 'text-white');
+                        b.classList.add('bg-[#f5f5f5]', 'text-gray-700');
+                    });
+                    btn.classList.remove('bg-[#f5f5f5]', 'text-gray-700');
+                    btn.classList.add('bg-[#cc1e0f]', 'text-white');
+                    
+                    renderEvents(category);
+                });
+            });
+        }
+
+        // Render posts
+        function renderPosts() {
+            const grid = document.getElementById('postsGrid');
+            const filteredPosts = currentFilter === 'all' 
+                ? posts 
+                : posts.filter(post => post.category === currentFilter);
+
+            grid.innerHTML = filteredPosts.map(post => `
+                <div class="masonry-item fade-in">
+                    <div class="relative rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group post-card" data-post-id="${post.id}">
+                        ${post.media && post.media.length > 1 ? renderMultipleMedia(post.media) : renderPostMedia(post.media)}
+                        ${post.media && post.media.length > 1 ? `<div class="absolute top-3 left-3 bg-black bg-opacity-60 text-white px-2 py-1 rounded-full text-xs">+${post.media.length}</div>` : ''}
+                        
+                        <!-- Hover overlay with gradient -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        
+                        <!-- Action buttons -->
+                        <div class="absolute top-3 right-3 flex space-x-2">
+                            ${post.user.name === 'Demo User' ? `
+                                <div class="post-actions opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1">
+                                    <button class="p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition-all edit-post-btn text-blue-600" data-post-id="${post.id}">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                    </button>
+                                    <button class="p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition-all delete-post-btn text-red-600" data-post-id="${post.id}">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            ` : ''}
+                            <button class="p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition-all save-btn ${post.saved ? 'text-[#cc1e0f]' : 'text-gray-600'}" data-post-id="${post.id}">
+                                <svg class="w-5 h-5" fill="${post.saved ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <!-- Bottom info - shows on hover -->
+                        <div class="absolute bottom-0 left-0 right-0 p-4 text-white transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-xs">
+                                        ${post.user.avatar}
+                                    </div>
+                                    <span class="text-sm font-medium">${post.user.name}</span>
+                                </div>
+                                <span class="text-xs bg-white bg-opacity-20 px-2 py-1 rounded-full capitalize">${post.category}</span>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <button class="flex items-center space-x-1 like-btn hover:scale-110 transition-transform ${post.liked ? 'text-red-500' : 'text-white'}" data-post-id="${post.id}">
+                                    <svg class="w-4 h-4" fill="${post.liked ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.682l-1.318-1.364a4.5 4.5 0 00-6.364 0z"></path>
+                                    </svg>
+                                    <span class="text-sm">${post.likes}</span>
+                                </button>
+                                <div class="flex items-center space-x-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                    </svg>
+                                    <span class="text-sm">${post.comments.length}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            setupPostInteractions();
+            setupCarousels();
+        }
+
+        // Render post media (images/videos)
+        function renderPostMedia(mediaArray) {
+            if (!mediaArray || mediaArray.length === 0) {
+                return `<div class="w-full h-48 bg-gray-200 flex items-center justify-center">
+                    <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                </div>`;
+            }
+            
+            const firstMedia = mediaArray[0];
+            if (firstMedia.type === 'video') {
+                return `<video class="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-300" muted controls>
+                    <source src="${firstMedia.url}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>`;
+            } else {
+                return `<img src="${firstMedia.url}" alt="Post media" class="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-300" style="opacity:1; display:block;" loading="lazy">`;
+            }
+        }
+
+        // Render multiple media in a swipeable carousel
+        function renderMultipleMedia(mediaArray) {
+            if (!mediaArray || mediaArray.length === 0) {
+                return renderPostMedia(mediaArray);
+            }
+            
+            if (mediaArray.length === 1) {
+                return renderPostMedia(mediaArray);
+            }
+            
+            // Create unique carousel ID
+            const carouselId = `carousel-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            
+            return `
+                <div class="relative h-64 overflow-hidden">
+                    <!-- Carousel container -->
+                    <div class="carousel-container flex transition-transform duration-300 ease-in-out h-full" id="${carouselId}">
+                        ${mediaArray.map((media, index) => {
+                            if (media.type === 'video') {
+                                return `
+                                    <div class="carousel-slide w-full flex-shrink-0">
+                                        <video class="w-full h-full object-cover" muted controls>
+                                            <source src="${media.url}" type="video/mp4">
+                                        </video>
+                                    </div>
+                                `;
+                            } else {
+                                return `
+                                    <div class="carousel-slide w-full flex-shrink-0">
+                                        <img src="${media.url}" alt="Post media" class="w-full h-full object-cover" style="opacity:1; display:block;" loading="lazy">
+                                    </div>
+                                `;
+                            }
+                        }).join('')}
+                    </div>
+                    
+                    <!-- Navigation arrows -->
+                    <button class="carousel-prev absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-all z-10" data-carousel="${carouselId}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </button>
+                    <button class="carousel-next absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-all z-10" data-carousel="${carouselId}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+                    
+                    <!-- Dots indicator -->
+                    <div class="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                        ${mediaArray.map((_, index) => `
+                            <button class="carousel-dot w-2 h-2 rounded-full bg-white bg-opacity-50 hover:bg-opacity-100 transition-all ${index === 0 ? 'bg-opacity-100' : ''}" data-carousel="${carouselId}" data-slide="${index}"></button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Setup carousel functionality
+        function setupCarousels() {
+            // Track current slide for each carousel
+            const carouselStates = new Map();
+            
+            // Initialize carousel states
+            document.querySelectorAll('.carousel-container').forEach(carousel => {
+                const carouselId = carousel.id;
+                const slides = carousel.querySelectorAll('.carousel-slide');
+                carouselStates.set(carouselId, { currentSlide: 0, totalSlides: slides.length });
+            });
+            
+            // Previous button handlers
+            document.querySelectorAll('.carousel-prev').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const carouselId = btn.dataset.carousel;
+                    const carousel = document.getElementById(carouselId);
+                    const state = carouselStates.get(carouselId);
+                    
+                    if (state && carousel) {
+                        state.currentSlide = state.currentSlide > 0 ? state.currentSlide - 1 : state.totalSlides - 1;
+                        updateCarousel(carousel, state);
+                        updateDots(carouselId, state.currentSlide);
+                    }
+                });
+            });
+            
+            // Next button handlers
+            document.querySelectorAll('.carousel-next').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const carouselId = btn.dataset.carousel;
+                    const carousel = document.getElementById(carouselId);
+                    const state = carouselStates.get(carouselId);
+                    
+                    if (state && carousel) {
+                        state.currentSlide = state.currentSlide < state.totalSlides - 1 ? state.currentSlide + 1 : 0;
+                        updateCarousel(carousel, state);
+                        updateDots(carouselId, state.currentSlide);
+                    }
+                });
+            });
+            
+            // Dot button handlers
+            document.querySelectorAll('.carousel-dot').forEach(dot => {
+                dot.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const carouselId = dot.dataset.carousel;
+                    const slideIndex = parseInt(dot.dataset.slide);
+                    const carousel = document.getElementById(carouselId);
+                    const state = carouselStates.get(carouselId);
+                    
+                    if (state && carousel) {
+                        state.currentSlide = slideIndex;
+                        updateCarousel(carousel, state);
+                        updateDots(carouselId, slideIndex);
+                    }
+                });
+            });
+            
+            // Touch/swipe support
+            document.querySelectorAll('.carousel-container').forEach(carousel => {
+                let startX = 0;
+                let currentX = 0;
+                let isDragging = false;
+                
+                carousel.addEventListener('touchstart', (e) => {
+                    startX = e.touches[0].clientX;
+                    isDragging = true;
+                });
+                
+                carousel.addEventListener('touchmove', (e) => {
+                    if (!isDragging) return;
+                    currentX = e.touches[0].clientX;
+                });
+                
+                carousel.addEventListener('touchend', (e) => {
+                    if (!isDragging) return;
+                    isDragging = false;
+                    
+                    const diffX = startX - currentX;
+                    const carouselId = carousel.id;
+                    const state = carouselStates.get(carouselId);
+                    
+                    if (Math.abs(diffX) > 50 && state) { // Minimum swipe distance
+                        if (diffX > 0) {
+                            // Swipe left - next slide
+                            state.currentSlide = state.currentSlide < state.totalSlides - 1 ? state.currentSlide + 1 : 0;
+                        } else {
+                            // Swipe right - previous slide
+                            state.currentSlide = state.currentSlide > 0 ? state.currentSlide - 1 : state.totalSlides - 1;
+                        }
+                        updateCarousel(carousel, state);
+                        updateDots(carouselId, state.currentSlide);
+                    }
+                });
+            });
+            
+            function updateCarousel(carousel, state) {
+                const translateX = -state.currentSlide * 100;
+                carousel.style.transform = `translateX(${translateX}%)`;
+            }
+            
+            function updateDots(carouselId, activeIndex) {
+                const dots = document.querySelectorAll(`[data-carousel="${carouselId}"].carousel-dot`);
+                dots.forEach((dot, index) => {
+                    if (index === activeIndex) {
+                        dot.classList.remove('bg-opacity-50');
+                        dot.classList.add('bg-opacity-100');
+                    } else {
+                        dot.classList.remove('bg-opacity-100');
+                        dot.classList.add('bg-opacity-50');
+                    }
+                });
+            }
+        }
+
+        // Setup post interactions
+        function setupPostInteractions() {
+            // Post cards - click to open detail modal
+            document.querySelectorAll('.post-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    // Don't open modal if clicking on carousel controls or action buttons
+                    if (e.target.closest('.carousel-prev') || 
+                        e.target.closest('.carousel-next') || 
+                        e.target.closest('.carousel-dot') ||
+                        e.target.closest('.save-btn') || 
+                        e.target.closest('.edit-post-btn') || 
+                        e.target.closest('.delete-post-btn') || 
+                        e.target.closest('.like-btn') ||
+                        e.target.closest('.post-actions') ||
+                        e.target.closest('button')) return;
+                    
+                    const postId = parseInt(card.dataset.postId);
+                    openPostDetailModal(postId);
+                });
+            });
+
+            // Like buttons
+            document.querySelectorAll('.like-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const postId = parseInt(btn.dataset.postId);
+                    toggleLike(postId);
+                });
+            });
+
+            // Save buttons
+            document.querySelectorAll('.save-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const postId = parseInt(btn.dataset.postId);
+                    toggleSave(postId);
+                });
+            });
+
+            // Edit post buttons
+            document.querySelectorAll('.edit-post-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const postId = parseInt(btn.dataset.postId);
+                    openEditPostModal(postId);
+                });
+            });
+
+            // Delete post buttons
+            document.querySelectorAll('.delete-post-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const postId = parseInt(btn.dataset.postId);
+                    deletePost(postId);
+                });
+            });
+        }
+
+        // Toggle like
+        function toggleLike(postId) {
+            const post = posts.find(p => p.id === postId);
+            if (post) {
+                post.liked = !post.liked;
+                post.likes += post.liked ? 1 : -1;
+                
+                // Update all like buttons for this post
+                const likeBtns = document.querySelectorAll(`[data-post-id="${postId}"].like-btn, #modalLikeBtn`);
+                likeBtns.forEach(likeBtn => {
+                    const svg = likeBtn.querySelector('svg');
+                    const span = likeBtn.querySelector('span');
+                    
+                    if (post.liked) {
+                        likeBtn.classList.add('text-red-500');
+                        likeBtn.classList.remove('text-gray-600');
+                        svg.classList.add('text-red-500', 'fill-current', 'heart-animation');
+                        svg.classList.remove('text-gray-600');
+                        svg.setAttribute('fill', 'currentColor');
+                    } else {
+                        likeBtn.classList.remove('text-red-500');
+                        likeBtn.classList.add('text-gray-600');
+                        svg.classList.remove('text-red-500', 'fill-current');
+                        svg.classList.add('text-gray-600');
+                        svg.setAttribute('fill', 'none');
+                    }
+                    
+                    if (span) span.textContent = post.likes;
+                });
+                
+                // Update modal like count if open
+                if (currentPostId === postId) {
+                    document.getElementById('modalLikeCount').textContent = post.likes;
+                }
+                
+                updateUserStats();
+                renderPosts(); // Re-render to update display
+            }
+        }
+
+        // Toggle save
+        function toggleSave(postId) {
+            const post = posts.find(p => p.id === postId);
+            if (post) {
+                post.saved = !post.saved;
+                
+                const saveBtn = document.querySelector(`[data-post-id="${postId}"].save-btn`);
+                const svg = saveBtn.querySelector('svg');
+                
+                if (post.saved) {
+                    saveBtn.classList.add('text-[#cc1e0f]');
+                    saveBtn.classList.remove('text-gray-600');
+                    svg.setAttribute('fill', 'currentColor');
+                    savedPosts.push(post);
+                } else {
+                    saveBtn.classList.remove('text-[#cc1e0f]');
+                    saveBtn.classList.add('text-gray-600');
+                    svg.setAttribute('fill', 'none');
+                    savedPosts = savedPosts.filter(p => p.id !== postId);
+                }
+                
+                renderSavedPosts();
+            }
+        }
+
+        // Post detail modal
+        function openPostDetailModal(postId) {
+            currentPostId = postId;
+            const post = posts.find(p => p.id === postId);
+            if (!post) return;
+
+            const modal = document.getElementById('postDetailModal');
+            
+            // Update modal content
+            const modalImageContainer = document.getElementById('modalPostImage').parentElement;
+            if (post.media && post.media.length > 0) {
+                if (post.media.length === 1) {
+                    // Single image/video
+                    const media = post.media[0];
+                    if (media.type === 'video') {
+                        modalImageContainer.innerHTML = `<video src="${media.url}" class="max-w-full max-h-full object-contain" controls></video>`;
+                    } else {
+                        modalImageContainer.innerHTML = `<img id="modalPostImage" src="${media.url}" alt="" class="max-w-full max-h-full object-contain" style="opacity: 1; display: block;">`;
+                    }
+                } else {
+                    // Multiple images - create carousel
+                    const carouselId = `modal-carousel-${Date.now()}`;
+                    modalImageContainer.innerHTML = `
+                        <div class="relative w-full h-full">
+                            <div class="carousel-container flex transition-transform duration-300 ease-in-out h-full" id="${carouselId}">
+                                ${post.media.map((media, index) => {
+                                    if (media.type === 'video') {
+                                        return `
+                                            <div class="carousel-slide w-full flex-shrink-0 flex items-center justify-center">
+                                                <video src="${media.url}" class="max-w-full max-h-full object-contain" controls></video>
+                                            </div>
+                                        `;
+                                    } else {
+                                        return `
+                                            <div class="carousel-slide w-full flex-shrink-0 flex items-center justify-center">
+                                                <img src="${media.url}" alt="Post media" class="max-w-full max-h-full object-contain" style="opacity:1; display:block;">
+                                            </div>
+                                        `;
+                                    }
+                                }).join('')}
+                            </div>
+                            
+                            <!-- Navigation arrows -->
+                            <button class="carousel-prev absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-70 transition-all z-10" data-carousel="${carouselId}">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                </svg>
+                            </button>
+                            <button class="carousel-next absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-70 transition-all z-10" data-carousel="${carouselId}">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </button>
+                            
+                            <!-- Dots indicator -->
+                            <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                                ${post.media.map((_, index) => `
+                                    <button class="carousel-dot w-3 h-3 rounded-full bg-white bg-opacity-50 hover:bg-opacity-100 transition-all ${index === 0 ? 'bg-opacity-100' : ''}" data-carousel="${carouselId}" data-slide="${index}"></button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Setup carousel for modal
+                    setTimeout(() => setupCarousels(), 100);
+                }
+            }
+            document.getElementById('modalUserAvatar').textContent = post.user.avatar;
+            document.getElementById('modalUserName').textContent = post.user.name;
+            document.getElementById('modalPostTime').textContent = formatTimeAgo(post.timestamp);
+            document.getElementById('modalPostCaption').textContent = post.caption;
+            document.getElementById('modalPostCategory').textContent = post.category;
+            document.getElementById('modalLikeCount').textContent = post.likes;
+            document.getElementById('modalCommentCount').textContent = post.comments.length;
+            
+            // Update like button state
+            const likeBtn = document.getElementById('modalLikeBtn');
+            const likeSvg = likeBtn.querySelector('svg');
+            if (post.liked) {
+                likeBtn.classList.add('text-red-500');
+                likeSvg.setAttribute('fill', 'currentColor');
+            } else {
+                likeBtn.classList.remove('text-red-500');
+                likeSvg.setAttribute('fill', 'none');
+            }
+            
+            // Update save button state
+            const saveBtn = document.getElementById('modalSaveBtn');
+            const saveSvg = saveBtn.querySelector('svg');
+            if (post.saved) {
+                saveBtn.classList.add('text-[#cc1e0f]');
+                saveSvg.setAttribute('fill', 'currentColor');
+            } else {
+                saveBtn.classList.remove('text-[#cc1e0f]');
+                saveSvg.setAttribute('fill', 'none');
+            }
+            
+            // Load comments
+            loadModalComments(postId);
+            
+            modal.classList.remove('hidden');
+        }
+
+        function loadModalComments(postId) {
+            const commentsList = document.getElementById('modalCommentsList');
+            const post = posts.find(p => p.id === postId);
+            
+            if (!post || !post.comments || post.comments.length === 0) {
+                commentsList.innerHTML = '<div class="text-center text-gray-500 py-4">No comments yet</div>';
+                return;
+            }
+
+            commentsList.innerHTML = post.comments.map(comment => `
+                <div class="flex space-x-3 comment-item" data-comment-id="${comment.id}">
+                    <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-sm flex-shrink-0">
+                        ${comment.avatar}
+                    </div>
+                    <div class="flex-1">
+                        <div class="bg-[#f5f5f5] rounded-2xl px-3 py-2 relative group">
+                            <div class="font-medium text-sm">${comment.user}</div>
+                            <div class="text-sm text-gray-800 comment-text">${comment.text}</div>
+                            ${comment.user === 'Demo User' ? `
+                                <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1">
+                                    <button class="edit-comment-btn p-1 hover:bg-gray-200 rounded text-blue-600" data-comment-id="${comment.id}">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                    </button>
+                                    <button class="delete-comment-btn p-1 hover:bg-gray-200 rounded text-red-600" data-comment-id="${comment.id}">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="text-xs text-gray-500 mt-1 ml-3">${formatTimeAgo(comment.timestamp)}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            setupCommentInteractions();
+        }
+
+        // Setup comment interactions
+        function setupCommentInteractions() {
+            document.querySelectorAll('.edit-comment-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const commentId = parseInt(btn.dataset.commentId);
+                    editComment(commentId);
+                });
+            });
+
+            document.querySelectorAll('.delete-comment-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const commentId = parseInt(btn.dataset.commentId);
+                    deleteComment(commentId);
+                });
+            });
+        }
+
+        // Edit comment
+        function editComment(commentId) {
+            const post = posts.find(p => p.id === currentPostId);
+            const comment = post.comments.find(c => c.id === commentId);
+            
+            if (comment) {
+                const commentElement = document.querySelector(`[data-comment-id="${commentId}"] .comment-text`);
+                const originalText = comment.text;
+                
+                commentElement.innerHTML = `
+                    <input type="text" class="w-full p-1 border border-gray-300 rounded text-sm edit-comment-input" value="${originalText}">
+                    <div class="flex space-x-2 mt-2">
+                        <button class="save-comment-btn text-xs bg-[#cc1e0f] text-white px-2 py-1 rounded">Save</button>
+                        <button class="cancel-comment-btn text-xs bg-gray-300 text-gray-700 px-2 py-1 rounded">Cancel</button>
+                    </div>
+                `;
+                
+                const input = commentElement.querySelector('.edit-comment-input');
+                const saveBtn = commentElement.querySelector('.save-comment-btn');
+                const cancelBtn = commentElement.querySelector('.cancel-comment-btn');
+                
+                input.focus();
+                
+                saveBtn.addEventListener('click', () => {
+                    const newText = input.value.trim();
+                    if (newText) {
+                        comment.text = newText;
+                        loadModalComments(currentPostId);
+                    }
+                });
+                
+                cancelBtn.addEventListener('click', () => {
+                    loadModalComments(currentPostId);
+                });
+                
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') saveBtn.click();
+                    if (e.key === 'Escape') cancelBtn.click();
+                });
+            }
+        }
+
+        // Delete comment
+        function deleteComment(commentId) {
+            if (confirm('Are you sure you want to delete this comment?')) {
+                const post = posts.find(p => p.id === currentPostId);
+                post.comments = post.comments.filter(c => c.id !== commentId);
+                
+                document.getElementById('modalCommentCount').textContent = post.comments.length;
+                loadModalComments(currentPostId);
+                renderPosts();
+                updateUserStats();
+            }
+        }
+
+        // Delete post
+        function deletePost(postId) {
+            if (confirm('Are you sure you want to delete this post?')) {
+                // Find and remove the post
+                const postIndex = posts.findIndex(p => p.id === postId);
+                if (postIndex !== -1) {
+                    posts.splice(postIndex, 1);
+                }
+                
+                // Remove from saved posts if it exists there
+                const savedIndex = savedPosts.findIndex(p => p.id === postId);
+                if (savedIndex !== -1) {
+                    savedPosts.splice(savedIndex, 1);
+                }
+                
+                // Re-render all views
+                renderPosts();
+                renderSavedPosts();
+                renderUserPosts();
+                updateUserStats();
+                showNotification('Post deleted successfully! 🗑️');
+            }
+        }
+
+        // Open edit post modal
+        function openEditPostModal(postId) {
+            const post = posts.find(p => p.id === postId);
+            if (!post) return;
+
+            const modal = document.getElementById('postEditModal');
+            
+            // Populate form
+            document.getElementById('editCaptionInput').value = post.caption;
+            document.getElementById('editCategorySelect').value = post.category;
+            
+            // Show current media
+            const mediaPreview = document.getElementById('editMediaPreview');
+            mediaPreview.innerHTML = post.media.map((media, index) => `
+                <div class="relative">
+                    ${media.type === 'video' 
+                        ? `<video src="${media.url}" class="w-full rounded-2xl" controls></video>`
+                        : `<img src="${media.url}" class="w-full rounded-2xl" alt="Post media">`
+                    }
+                    <button type="button" class="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full hover:bg-red-700" onclick="removeMediaFromEdit(${index})">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            `).join('');
+            
+            modal.classList.remove('hidden');
+            modal.dataset.postId = postId;
+        }
+
+        // Upload functionality
+        function setupUpload() {
+            const uploadArea = document.getElementById('uploadArea');
+            const mediaInput = document.getElementById('mediaInput');
+            const mediaPreview = document.getElementById('mediaPreview');
+            const previewContainer = document.getElementById('previewContainer');
+            const addMoreBtn = document.getElementById('addMoreMedia');
+            const uploadForm = document.getElementById('uploadForm');
+            let selectedFiles = [];
+
+            uploadArea.addEventListener('click', () => {
+                mediaInput.click();
+            });
+
+            addMoreBtn.addEventListener('click', () => {
+                mediaInput.click();
+            });
+
+            mediaInput.addEventListener('change', (e) => {
+                const files = Array.from(e.target.files);
+                files.forEach(file => {
+                    if (selectedFiles.length < 10) { // Limit to 10 files
+                        selectedFiles.push(file);
+                    }
+                });
+                updateMediaPreview();
+            });
+
+            function updateMediaPreview() {
+                if (selectedFiles.length === 0) {
+                    mediaPreview.classList.add('hidden');
+                    mediaPreview.style.display = 'none';
+                    return;
+                }
+
+                mediaPreview.classList.remove('hidden');
+                mediaPreview.style.display = 'block';
+                mediaPreview.style.opacity = '1';
+                previewContainer.innerHTML = selectedFiles.map((file, index) => {
+                    const isVideo = file.type.startsWith('video/');
+                    const url = URL.createObjectURL(file);
+                    
+                    return `
+                        <div class="relative">
+                            ${isVideo 
+                                ? `<video src="${url}" class="w-full h-32 rounded-2xl object-cover" controls style="display: block; opacity: 1;"></video>`
+                                : `<img src="${url}" class="w-full h-32 rounded-2xl object-cover" alt="Preview" style="display: block; opacity: 1;">`
+                            }
+                            <button type="button" class="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full hover:bg-red-700" onclick="removeMediaFile(${index})">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            window.removeMediaFile = function(index) {
+                selectedFiles.splice(index, 1);
+                updateMediaPreview();
+            };
+
+            // Setup post edit form
+            const postEditForm = document.getElementById('postEditForm');
+            const closePostEditModal = document.getElementById('closePostEditModal');
+            
+            closePostEditModal.addEventListener('click', () => {
+                document.getElementById('postEditModal').classList.add('hidden');
+            });
+
+            postEditForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const postId = parseInt(document.getElementById('postEditModal').dataset.postId);
+                const post = posts.find(p => p.id === postId);
+                
+                if (post) {
+                    post.caption = document.getElementById('editCaptionInput').value;
+                    post.category = document.getElementById('editCategorySelect').value;
+                    
+                    renderPosts();
+                    renderSavedPosts();
+                    renderUserPosts();
+                    document.getElementById('postEditModal').classList.add('hidden');
+                    showNotification('Post updated successfully! 🎉');
+                }
+            });
+
+            uploadForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const caption = document.getElementById('captionInput').value.trim();
+                const category = document.getElementById('categorySelect').value;
+
+                if (selectedFiles.length > 0 && caption) {
+                    // Show loading state
+                    const submitBtn = uploadForm.querySelector('button[type="submit"]');
+                    const originalText = submitBtn.textContent;
+                    submitBtn.textContent = 'Uploading...';
+                    submitBtn.disabled = true;
+
+                    // Process files and create media array
+                    const processFiles = () => {
+                        const media = [];
+                        
+                        selectedFiles.forEach((file, index) => {
+                            try {
+                                // Create a stable URL for the file
+                                const reader = new FileReader();
+                                reader.onload = function(e) {
+                                    media.push({
+                                        type: file.type.startsWith('video/') ? 'video' : 'image',
+                                        url: e.target.result, // Use base64 data URL for reliability
+                                        file: file
+                                    });
+
+                                    // When all files are processed, create the post
+                                    if (media.length === selectedFiles.length) {
+                                        createNewPost(media, caption, category);
+                                        
+                                        // Reset form
+                                        uploadForm.reset();
+                                        selectedFiles = [];
+                                        mediaPreview.classList.add('hidden');
+                                        previewContainer.innerHTML = '';
+
+                                        // Reset submit button
+                                        submitBtn.textContent = originalText;
+                                        submitBtn.disabled = false;
+
+                                        // Switch to home feed
+                                        document.querySelector('[data-page="homeFeed"]').click();
+
+                                        // Show success message
+                                        showNotification('Post shared successfully! 🎉');
+                                    }
+                                };
+                                reader.readAsDataURL(file);
+                            } catch (error) {
+                                console.error('Error processing file:', error);
+                                showNotification('Error uploading file. Please try again.');
+                                submitBtn.textContent = originalText;
+                                submitBtn.disabled = false;
+                            }
+                        });
+                    };
+
+                    processFiles();
+                } else if (!caption) {
+                    showNotification('Please add a caption to your post');
+                } else if (selectedFiles.length === 0) {
+                    showNotification('Please select at least one image or video');
+                }
+            });
+
+            function createNewPost(media, caption, category) {
+                // Create new post with unique ID
+                const newPost = {
+                    id: Date.now() + Math.random(), // Ensure unique ID
+                    user: { name: 'Demo User', avatar: '👤' },
+                    media: media,
+                    caption: caption,
+                    category: category,
+                    likes: 0,
+                    comments: [],
+                    liked: false,
+                    saved: false,
+                    timestamp: new Date()
+                };
+
+                // Add to beginning of posts array
+                posts.unshift(newPost);
+                
+                // Update displays
+                renderPosts();
+                renderSavedPosts();
+                renderUserPosts();
+                updateUserStats();
+            }
+        }
+
+        // Events functionality
+        function renderEvents(categoryFilter = 'all') {
+            const eventsList = document.getElementById('eventsList');
+            let filteredEvents = events;
+            
+            // Apply category filter
+            if (categoryFilter !== 'all') {
+                filteredEvents = events.filter(event => event.category === categoryFilter);
+            }
+            
+            eventsList.innerHTML = filteredEvents.map(event => `
+                <div class="bg-[#e9e2d0] rounded-2xl overflow-hidden hover:shadow-lg transition-shadow cursor-pointer event-card" data-event-id="${event.id}">
+                    ${event.media && event.media.length > 0 ? `
+                        <div class="relative">
+                            ${event.media[0].type === 'video' 
+                                ? `<video src="${event.media[0].url}" class="w-full h-48 object-cover" muted></video>`
+                                : `<img src="${event.media[0].url}" class="w-full h-48 object-cover" alt="Event media" onload="this.style.opacity='1'" style="opacity:0; transition: opacity 0.3s;" onerror="this.style.display='none';">`
+                            }
+                            ${event.media.length > 1 ? `<div class="absolute top-3 left-3 bg-black bg-opacity-60 text-white px-2 py-1 rounded-full text-xs">+${event.media.length}</div>` : ''}
+                            <div class="absolute top-3 right-3 bg-white bg-opacity-90 px-2 py-1 rounded-full text-xs font-medium capitalize">${event.category}</div>
+                        </div>
+                    ` : ''}
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-bold mb-2">${event.title}</h3>
+                                <p class="text-gray-600 text-sm mb-3 line-clamp-2">${event.description}</p>
+                                <div class="flex items-center space-x-4 text-sm text-gray-600">
+                                    <div class="flex items-center space-x-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                        </svg>
+                                        <span>${event.date} at ${event.time}</span>
+                                    </div>
+                                    <div class="flex items-center space-x-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        </svg>
+                                        <span>${event.location}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4 text-sm">
+                                <span class="text-green-600">✓ ${event.attendees.going} Going</span>
+                                <span class="text-yellow-600">★ ${event.attendees.interested} Interested</span>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="rsvp-btn px-4 py-2 rounded-full text-sm font-medium transition-colors ${event.userStatus === 'going' ? 'bg-[#cc1e0f] text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}" data-event-id="${event.id}" data-status="going" onclick="event.stopPropagation()">
+                                    Going
+                                </button>
+                                <button class="rsvp-btn px-4 py-2 rounded-full text-sm font-medium transition-colors ${event.userStatus === 'interested' ? 'bg-[#cc1e0f] text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}" data-event-id="${event.id}" data-status="interested" onclick="event.stopPropagation()">
+                                    Interested
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            setupEventInteractions();
+        }
+
+        function setupEventInteractions() {
+            // Event cards - click to open detail modal
+            document.querySelectorAll('.event-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const eventId = parseInt(card.dataset.eventId);
+                    openEventDetailModal(eventId);
+                });
+            });
+
+            // RSVP buttons
+            document.querySelectorAll('.rsvp-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const eventId = parseInt(btn.dataset.eventId);
+                    const status = btn.dataset.status;
+                    updateRSVP(eventId, status);
+                });
+            });
+        }
+
+        // Open event detail modal
+        function openEventDetailModal(eventId) {
+            const event = events.find(e => e.id === eventId);
+            if (!event) return;
+
+            const modal = document.getElementById('eventDetailModal');
+            
+            // Update modal content
+            document.getElementById('eventDetailTitle').textContent = event.title;
+            document.getElementById('eventDetailDescription').textContent = event.description;
+            document.getElementById('eventDetailDateTime').textContent = `${event.date} at ${event.time}`;
+            document.getElementById('eventDetailLocation').textContent = event.location;
+            document.getElementById('eventDetailCreator').textContent = event.creator;
+            document.getElementById('eventDetailGoing').textContent = event.attendees.going;
+            document.getElementById('eventDetailInterested').textContent = event.attendees.interested;
+            
+            // Show media if available
+            const mediaContainer = document.getElementById('eventMediaContainer');
+            const mediaSection = document.getElementById('eventDetailMedia');
+            
+            if (event.media && event.media.length > 0) {
+                mediaSection.classList.remove('hidden');
+                mediaContainer.innerHTML = event.media.map(media => {
+                    if (media.type === 'video') {
+                        return `<video src="${media.url}" class="w-full rounded-2xl" controls></video>`;
+                    } else {
+                        return `<img src="${media.url}" class="w-full rounded-2xl" alt="Event media" onload="this.style.opacity='1'" style="opacity:0; transition: opacity 0.3s;" onerror="this.style.display='none';">`;
+                    }
+                }).join('');
+            } else {
+                mediaSection.classList.add('hidden');
+            }
+            
+            // Update RSVP buttons
+            const goingBtn = document.getElementById('eventDetailGoingBtn');
+            const interestedBtn = document.getElementById('eventDetailInterestedBtn');
+            
+            // Reset button states
+            [goingBtn, interestedBtn].forEach(btn => {
+                btn.classList.remove('bg-[#cc1e0f]', 'text-white');
+                btn.classList.add('bg-white', 'text-gray-700');
+            });
+            
+            // Set active button
+            if (event.userStatus === 'going') {
+                goingBtn.classList.remove('bg-white', 'text-gray-700');
+                goingBtn.classList.add('bg-[#cc1e0f]', 'text-white');
+            } else if (event.userStatus === 'interested') {
+                interestedBtn.classList.remove('bg-white', 'text-gray-700');
+                interestedBtn.classList.add('bg-[#cc1e0f]', 'text-white');
+            }
+            
+            // Set up button event listeners
+            goingBtn.onclick = () => updateEventRSVP(eventId, 'going');
+            interestedBtn.onclick = () => updateEventRSVP(eventId, 'interested');
+            
+            modal.classList.remove('hidden');
+        }
+
+        // Update RSVP from modal
+        function updateEventRSVP(eventId, newStatus) {
+            updateRSVP(eventId, newStatus);
+            // Update modal display
+            const event = events.find(e => e.id === eventId);
+            if (event) {
+                document.getElementById('eventDetailGoing').textContent = event.attendees.going;
+                document.getElementById('eventDetailInterested').textContent = event.attendees.interested;
+                
+                const goingBtn = document.getElementById('eventDetailGoingBtn');
+                const interestedBtn = document.getElementById('eventDetailInterestedBtn');
+                
+                // Reset button states
+                [goingBtn, interestedBtn].forEach(btn => {
+                    btn.classList.remove('bg-[#cc1e0f]', 'text-white');
+                    btn.classList.add('bg-white', 'text-gray-700');
+                });
+                
+                // Set active button
+                if (event.userStatus === 'going') {
+                    goingBtn.classList.remove('bg-white', 'text-gray-700');
+                    goingBtn.classList.add('bg-[#cc1e0f]', 'text-white');
+                } else if (event.userStatus === 'interested') {
+                    interestedBtn.classList.remove('bg-white', 'text-gray-700');
+                    interestedBtn.classList.add('bg-[#cc1e0f]', 'text-white');
+                }
+            }
+        }
+
+        function updateRSVP(eventId, newStatus) {
+            const event = events.find(e => e.id === eventId);
+            if (event) {
+                // Update attendee counts
+                if (event.userStatus === 'going') event.attendees.going--;
+                if (event.userStatus === 'interested') event.attendees.interested--;
+                
+                if (newStatus === event.userStatus) {
+                    event.userStatus = 'not_going';
+                } else {
+                    event.userStatus = newStatus;
+                    if (newStatus === 'going') event.attendees.going++;
+                    if (newStatus === 'interested') event.attendees.interested++;
+                }
+                
+                renderEvents();
+            }
+        }
+
+        // Event creation
+        function setupEventCreation() {
+            const createEventBtn = document.getElementById('createEventBtn');
+            const eventModal = document.getElementById('eventModal');
+            const closeEventModal = document.getElementById('closeEventModal');
+            const eventForm = document.getElementById('eventForm');
+            const eventUploadArea = document.getElementById('eventUploadArea');
+            const eventMediaInput = document.getElementById('eventMediaInput');
+            const eventMediaPreview = document.getElementById('eventMediaPreview');
+            const eventPreviewContainer = document.getElementById('eventPreviewContainer');
+            let eventSelectedFiles = [];
+
+            createEventBtn.addEventListener('click', () => {
+                eventModal.classList.remove('hidden');
+            });
+
+            closeEventModal.addEventListener('click', () => {
+                eventModal.classList.add('hidden');
+                eventSelectedFiles = [];
+                eventMediaPreview.classList.add('hidden');
+            });
+
+            // Event media upload
+            eventUploadArea.addEventListener('click', () => {
+                eventMediaInput.click();
+            });
+
+            eventMediaInput.addEventListener('change', (e) => {
+                const files = Array.from(e.target.files);
+                files.forEach(file => {
+                    if (eventSelectedFiles.length < 5) { // Limit to 5 files for events
+                        eventSelectedFiles.push(file);
+                    }
+                });
+                updateEventMediaPreview();
+            });
+
+            function updateEventMediaPreview() {
+                if (eventSelectedFiles.length === 0) {
+                    eventMediaPreview.classList.add('hidden');
+                    eventMediaPreview.style.display = 'none';
+                    return;
+                }
+
+                eventMediaPreview.classList.remove('hidden');
+                eventMediaPreview.style.display = 'block';
+                eventMediaPreview.style.opacity = '1';
+                eventPreviewContainer.innerHTML = eventSelectedFiles.map((file, index) => {
+                    const isVideo = file.type.startsWith('video/');
+                    const url = URL.createObjectURL(file);
+                    
+                    return `
+                        <div class="relative">
+                            ${isVideo 
+                                ? `<video src="${url}" class="w-full h-24 rounded-xl object-cover" controls style="display: block; opacity: 1;"></video>`
+                                : `<img src="${url}" class="w-full h-24 rounded-xl object-cover" alt="Preview" style="display: block; opacity: 1;">`
+                            }
+                            <button type="button" class="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full hover:bg-red-700 text-xs" onclick="removeEventMediaFile(${index})">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            window.removeEventMediaFile = function(index) {
+                eventSelectedFiles.splice(index, 1);
+                updateEventMediaPreview();
+            };
+
+            eventForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                // Process event media files
+                const processEventFiles = async () => {
+                    const media = [];
+                    
+                    for (const file of eventSelectedFiles) {
+                        try {
+                            const url = URL.createObjectURL(file);
+                            media.push({
+                                type: file.type.startsWith('video/') ? 'video' : 'image',
+                                url: url,
+                                file: file
+                            });
+                        } catch (error) {
+                            console.error('Error processing event file:', error);
+                        }
+                    }
+
+                    const newEvent = {
+                        id: Date.now(),
+                        title: document.getElementById('eventTitle').value,
+                        description: document.getElementById('eventDescription').value,
+                        date: document.getElementById('eventDate').value,
+                        time: document.getElementById('eventTime').value,
+                        location: document.getElementById('eventLocation').value,
+                        creator: 'Demo User',
+                        category: document.getElementById('eventCategorySelect').value,
+                        media: media,
+                        attendees: { going: 1, interested: 0, not_going: 0 },
+                        userStatus: 'going'
+                    };
+
+                    events.unshift(newEvent);
+                    renderEvents();
+                    
+                    eventForm.reset();
+                    eventSelectedFiles = [];
+                    eventMediaPreview.classList.add('hidden');
+                    eventModal.classList.add('hidden');
+                    
+                    showNotification('Event created successfully! 🎉');
+                };
+
+                processEventFiles();
+            });
+
+            // Setup event detail modal
+            const eventDetailModal = document.getElementById('eventDetailModal');
+            const closeEventDetailModal = document.getElementById('closeEventDetailModal');
+
+            closeEventDetailModal.addEventListener('click', () => {
+                eventDetailModal.classList.add('hidden');
+            });
+
+            eventDetailModal.addEventListener('click', (e) => {
+                if (e.target === eventDetailModal) {
+                    eventDetailModal.classList.add('hidden');
+                }
+            });
+        }
+
+        // Render saved posts
+        function renderSavedPosts(categoryFilter = 'all') {
+            const savedGrid = document.getElementById('savedPosts');
+            let userSavedPosts = posts.filter(post => post.saved);
+            
+            // Apply category filter
+            if (categoryFilter !== 'all') {
+                userSavedPosts = userSavedPosts.filter(post => post.category === categoryFilter);
+            }
+            
+            if (userSavedPosts.length === 0) {
+                savedGrid.innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                        </svg>
+                        <p class="text-gray-500">No saved posts yet</p>
+                        <p class="text-sm text-gray-400 mt-1">Posts you save will appear here</p>
+                    </div>
+                `;
+                return;
+            }
+
+            savedGrid.innerHTML = userSavedPosts.map(post => `
+                <div class="masonry-item fade-in">
+                    <div class="relative rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group saved-post-card" data-post-id="${post.id}">
+                        ${renderPostMedia(post.media)}
+                        
+                        <!-- Hover overlay with gradient -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        
+                        <!-- Save button - always visible -->
+                        <button class="absolute top-3 right-3 p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition-all save-btn text-[#cc1e0f]" data-post-id="${post.id}">
+                            <svg class="w-5 h-5" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                            </svg>
+                        </button>
+                        
+                        <!-- Bottom info - shows on hover -->
+                        <div class="absolute bottom-0 left-0 right-0 p-4 text-white transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-xs">
+                                        ${post.user.avatar}
+                                    </div>
+                                    <span class="text-sm font-medium">${post.user.name}</span>
+                                </div>
+                                <span class="text-xs bg-white bg-opacity-20 px-2 py-1 rounded-full capitalize">${post.category}</span>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <button class="flex items-center space-x-1 like-btn hover:scale-110 transition-transform ${post.liked ? 'text-red-500' : 'text-white'}" data-post-id="${post.id}">
+                                    <svg class="w-4 h-4" fill="${post.liked ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.682l-1.318-1.364a4.5 4.5 0 00-6.364 0z"></path>
+                                    </svg>
+                                    <span class="text-sm">${post.likes}</span>
+                                </button>
+                                <div class="flex items-center space-x-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                    </svg>
+                                    <span class="text-sm">${post.comments.length}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            setupSavedPostInteractions();
+        }
+
+        // Setup saved post interactions
+        function setupSavedPostInteractions() {
+            // Saved post cards - click to open detail modal
+            document.querySelectorAll('.saved-post-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    // Don't open modal if clicking on save button
+                    if (e.target.closest('.save-btn')) return;
+                    
+                    const postId = parseInt(card.dataset.postId);
+                    openPostDetailModal(postId);
+                });
+            });
+
+            // Save buttons in saved page
+            document.querySelectorAll('#savedPosts .save-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const postId = parseInt(btn.dataset.postId);
+                    toggleSave(postId);
+                });
+            });
+        }
+
+        // Render user posts in profile
+        function renderUserPosts() {
+            const userPostsGrid = document.getElementById('userPosts');
+            const userPosts = posts.filter(post => post.user.name === 'Demo User');
+            
+            if (userPosts.length === 0) {
+                userPostsGrid.innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        <p class="text-gray-500">No posts yet</p>
+                        <p class="text-sm text-gray-400 mt-1">Your posts will appear here</p>
+                    </div>
+                `;
+                return;
+            }
+
+            userPostsGrid.innerHTML = userPosts.map(post => `
+                <div class="masonry-item fade-in">
+                    <div class="relative rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group user-post-card" data-post-id="${post.id}">
+                        ${post.media && post.media.length > 1 ? renderMultipleMedia(post.media) : renderPostMedia(post.media)}
+                        ${post.media && post.media.length > 1 ? `<div class="absolute top-3 left-3 bg-black bg-opacity-60 text-white px-2 py-1 rounded-full text-xs">+${post.media.length}</div>` : ''}
+                        
+                        <!-- Hover overlay with gradient -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        
+                        <!-- Action buttons -->
+                        <div class="absolute top-3 right-3 flex space-x-2">
+                            <div class="post-actions opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1">
+                                <button class="p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition-all edit-post-btn text-blue-600" data-post-id="${post.id}">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </button>
+                                <button class="p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition-all delete-post-btn text-red-600" data-post-id="${post.id}">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Bottom info - shows on hover -->
+                        <div class="absolute bottom-0 left-0 right-0 p-4 text-white transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs bg-white bg-opacity-20 px-2 py-1 rounded-full capitalize">${post.category}</span>
+                                <span class="text-xs">${formatTimeAgo(post.timestamp)}</span>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <div class="flex items-center space-x-1">
+                                    <svg class="w-4 h-4 ${post.liked ? 'text-red-500 fill-current' : 'text-white'}" fill="${post.liked ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.682l-1.318-1.364a4.5 4.5 0 00-6.364 0z"></path>
+                                    </svg>
+                                    <span class="text-sm">${post.likes}</span>
+                                </div>
+                                <div class="flex items-center space-x-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                    </svg>
+                                    <span class="text-sm">${post.comments.length}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            setupUserPostInteractions();
+            setupCarousels();
+        }
+
+        // Setup user post interactions
+        function setupUserPostInteractions() {
+            // User post cards - click to open detail modal
+            document.querySelectorAll('.user-post-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    // Don't open modal if clicking on carousel controls or action buttons
+                    if (e.target.closest('.carousel-prev') || 
+                        e.target.closest('.carousel-next') || 
+                        e.target.closest('.carousel-dot') ||
+                        e.target.closest('.edit-post-btn') || 
+                        e.target.closest('.delete-post-btn') || 
+                        e.target.closest('.post-actions') ||
+                        e.target.closest('button')) return;
+                    
+                    const postId = parseInt(card.dataset.postId);
+                    openPostDetailModal(postId);
+                });
+            });
+
+            // Edit post buttons in profile
+            document.querySelectorAll('#userPosts .edit-post-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const postId = parseInt(btn.dataset.postId);
+                    openEditPostModal(postId);
+                });
+            });
+
+            // Delete post buttons in profile
+            document.querySelectorAll('#userPosts .delete-post-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const postId = parseInt(btn.dataset.postId);
+                    deletePost(postId);
+                });
+            });
+        }
+
+        // Update user stats
+        function updateUserStats() {
+            const totalPosts = posts.filter(post => post.user.name === 'Demo User').length;
+            const totalLikes = posts.reduce((sum, post) => sum + (post.liked ? 1 : 0), 0);
+            const totalComments = posts.reduce((sum, post) => sum + post.comments.length, 0);
+
+            document.getElementById('userPostCount').textContent = totalPosts;
+            document.getElementById('userLikeCount').textContent = totalLikes;
+            document.getElementById('userCommentCount').textContent = totalComments;
+        }
+
+        // Utility functions
+        function formatTimeAgo(timestamp) {
+            const now = new Date();
+            const diff = now - timestamp;
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            
+            if (hours < 1) return 'Just now';
+            if (hours < 24) return `${hours}h ago`;
+            const days = Math.floor(hours / 24);
+            return `${days}d ago`;
+        }
+
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 bg-[#cc1e0f] text-white px-6 py-3 rounded-2xl shadow-lg z-50 fade-in';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Setup post detail modal
+        function setupPostDetailModal() {
+            const modal = document.getElementById('postDetailModal');
+            const closeBtn = document.getElementById('closePostModal');
+            const likeBtn = document.getElementById('modalLikeBtn');
+            const saveBtn = document.getElementById('modalSaveBtn');
+            const submitBtn = document.getElementById('modalSubmitComment');
+            const commentInput = document.getElementById('modalCommentInput');
+
+            // Close modal
+            closeBtn.addEventListener('click', () => {
+                modal.classList.add('hidden');
+            });
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.add('hidden');
+                }
+            });
+
+            // Like button
+            likeBtn.addEventListener('click', () => {
+                if (currentPostId) {
+                    toggleLike(currentPostId);
+                    // Update modal display
+                    const post = posts.find(p => p.id === currentPostId);
+                    if (post) {
+                        document.getElementById('modalLikeCount').textContent = post.likes;
+                        const likeSvg = likeBtn.querySelector('svg');
+                        if (post.liked) {
+                            likeBtn.classList.add('text-red-500');
+                            likeSvg.setAttribute('fill', 'currentColor');
+                        } else {
+                            likeBtn.classList.remove('text-red-500');
+                            likeSvg.setAttribute('fill', 'none');
+                        }
+                    }
+                }
+            });
+
+            // Save button
+            saveBtn.addEventListener('click', () => {
+                if (currentPostId) {
+                    toggleSave(currentPostId);
+                    // Update modal display
+                    const post = posts.find(p => p.id === currentPostId);
+                    if (post) {
+                        const saveSvg = saveBtn.querySelector('svg');
+                        if (post.saved) {
+                            saveBtn.classList.add('text-[#cc1e0f]');
+                            saveSvg.setAttribute('fill', 'currentColor');
+                        } else {
+                            saveBtn.classList.remove('text-[#cc1e0f]');
+                            saveSvg.setAttribute('fill', 'none');
+                        }
+                    }
+                }
+            });
+
+            // Submit comment
+            submitBtn.addEventListener('click', () => {
+                const comment = commentInput.value.trim();
+                if (comment && currentPostId) {
+                    // Add comment to post
+                    const post = posts.find(p => p.id === currentPostId);
+                    if (post) {
+                        const newCommentObj = {
+                            id: Date.now(),
+                            user: 'Demo User',
+                            avatar: '👤',
+                            text: comment,
+                            timestamp: new Date()
+                        };
+                        post.comments.push(newCommentObj);
+                        document.getElementById('modalCommentCount').textContent = post.comments.length;
+                        loadModalComments(currentPostId);
+                        renderPosts();
+                        updateUserStats();
+                    }
+                    
+                    commentInput.value = '';
+                }
+            });
+
+            commentInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    submitBtn.click();
+                }
+            });
+        }
+
+        // Setup profile editing
+        function setupProfileEditing() {
+            const editProfileBtn = document.getElementById('editProfileBtn');
+            const profileEditModal = document.getElementById('profileEditModal');
+            const closeProfileEditModal = document.getElementById('closeProfileEditModal');
+            const profileEditForm = document.getElementById('profileEditForm');
+            const changeAvatarBtn = document.getElementById('changeAvatarBtn');
+            const avatarInput = document.getElementById('avatarInput');
+            const editProfileAvatar = document.getElementById('editProfileAvatar');
+
+            // Open edit modal
+            editProfileBtn.addEventListener('click', () => {
+                // Populate current values
+                document.getElementById('editProfileName').value = document.getElementById('profileName').textContent;
+                document.getElementById('editProfileBio').value = document.getElementById('profileBio').textContent;
+                profileEditModal.classList.remove('hidden');
+            });
+
+            // Close modal
+            closeProfileEditModal.addEventListener('click', () => {
+                profileEditModal.classList.add('hidden');
+            });
+
+            profileEditModal.addEventListener('click', (e) => {
+                if (e.target === profileEditModal) {
+                    profileEditModal.classList.add('hidden');
+                }
+            });
+
+            // Change avatar
+            changeAvatarBtn.addEventListener('click', () => {
+                avatarInput.click();
+            });
+
+            avatarInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const avatarUrl = e.target.result;
+                        editProfileAvatar.innerHTML = `<img src="${avatarUrl}" class="w-full h-full object-cover rounded-full" alt="Profile">`;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Save profile changes
+            profileEditForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const newName = document.getElementById('editProfileName').value.trim();
+                const newBio = document.getElementById('editProfileBio').value.trim();
+                
+                if (newName) {
+                    // Update profile display
+                    document.getElementById('profileName').textContent = newName;
+                    document.getElementById('profileBio').textContent = newBio;
+                    
+                    // Update avatar if changed
+                    const avatarImg = editProfileAvatar.querySelector('img');
+                    if (avatarImg) {
+                        document.getElementById('profileAvatar').innerHTML = avatarImg.outerHTML;
+                        document.getElementById('userAvatar').innerHTML = avatarImg.outerHTML;
+                    }
+                    
+                    // Update all user posts with new name
+                    posts.forEach(post => {
+                        if (post.user.name === 'Demo User') {
+                            post.user.name = newName;
+                        }
+                    });
+                    
+                    // Re-render posts to show updated name
+                    renderPosts();
+                    renderSavedPosts();
+                    
+                    profileEditModal.classList.add('hidden');
+                    showNotification('Profile updated successfully! 🎉');
+                }
+            });
+        }
+
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', () => {
+            initApp();
+            setupNavigation();
+            setupFilters();
+            setupUpload();
+            setupEventCreation();
+            setupPostDetailModal();
+            setupProfileEditing();
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97926f4ca2877b62',t:'MTc1Njg3MzAxOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
